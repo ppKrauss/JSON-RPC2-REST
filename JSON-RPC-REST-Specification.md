@@ -15,7 +15,10 @@
 ## 1 Overview
 
 JSON-RPC is a stateless, light-weight remote procedure call (RPC)
-protocol. Primarily this specification defines several data structures
+protocol. JSON-RPC-REST is a little extension to manage [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes), to be more usable into RESTfull environments.
+It also extends error code and error message to be used as "warning" information.
+
+Primarily this specification defines several data structures
 and the rules around their processing. It is transport agnostic in that
 the concepts can be used within the same process, over sockets, over
 http, or in many various message passing environments. It uses
@@ -31,7 +34,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 document are to be interpreted as described in
 [RFC 2119](http://www.ietf.org/rfc/rfc2119.txt).
 
-Since JSON-RPC utilizes JSON, it has the same type system (see
+Since JSON-RPC-REST utilizes JSON, it has the same type system (see
 <http://www.json.org> or
 [RFC 4627](http://www.ietf.org/rfc/rfc4627.txt)). JSON can represent
 four primitive types (Strings, Numbers, Booleans, and Null) and two
@@ -56,7 +59,11 @@ One implementation of this specification could easily fill both of those
 roles, even at the same time, to other different clients or the same
 client. This specification does not address that layer of complexity.
 
+<div class="section">
 ## 3 Compatibility
+
+JSON-RPC2-REST Request objects and Response objects may not work with
+existing JSON-RPC 2.0 clients or servers, because error codes are changed to be floating numbers.
 
 JSON-RPC 2.0 Request objects and Response objects may not work with
 existing JSON-RPC 1.0 clients or servers. However, it is easy to
@@ -64,6 +71,20 @@ distinguish between the two versions as 2.0 always has a member named
 "jsonrpc" with a String value of "2.0" whereas 1.0 does not. Most 2.0
 implementations should consider trying to handle 1.0 objects, even if
 not the peer-to-peer and class hinting aspects of 1.0.
+
+## 3.1 Redundances
+
+* HTTP status is passed by HTTP and by error-code (integer part of the error code). <br/>Is a debug: status inconsistensy is a response bug.<br/>Optional handling: integer error code (or float with decimal zero) interpreted as internal errror (not a copy of the HTTP status).
+
+* Method name is implicit by endpoint: method name and semantic of the name (usually expressing "put", "get", "delete", "update, etc. as suffix) is a redundancy, so alternative extension is to standardize some naming-suffix conventions.
+
+## 3.2 Differences
+
+Differences between JSON-RPC2 and JSON-RPC2-REST.  
+
+...
+
+</div>
 
 <div class="section">
 
@@ -74,7 +95,7 @@ Request object has the following members:
 
   - jsonrpc  
     A String specifying the version of the JSON-RPC protocol. MUST be
-    exactly "2.0".
+    exactly "2.0-rest".
 
 <!-- end list -->
 
@@ -157,7 +178,7 @@ JSON Object, with the following members:
 
   - jsonrpc  
     A String specifying the version of the JSON-RPC protocol. MUST be
-    exactly "2.0".
+    exactly "2.0-rest" or "2.0-rest-3digits" for error codes with 3 digits instead 5.
 
 <!-- end list -->
 
@@ -210,56 +231,9 @@ members:
     The value of this member is defined by the Server (e.g. detailed
     error information, nested errors etc.).
 
-The error codes from and including -32768 to -32000 are reserved for
-pre-defined errors. Any code within this range, but not defined
-explicitly below is reserved for future use. The error codes are nearly
-the same as those suggested for XML-RPC at the following url:
-<http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php>
+... If the Response Object contains a `result` member, the semantic is not a "full error" but a warning.
 
-<table>
-<thead>
-<tr class="header">
-<th>code</th>
-<th>message</th>
-<th>meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>-32700</td>
-<td>Parse error</td>
-<td>Invalid JSON was received by the server.<br />
-An error occurred on the server while parsing the JSON text.</td>
-</tr>
-<tr class="even">
-<td>-32600</td>
-<td>Invalid Request</td>
-<td>The JSON sent is not a valid Request object.</td>
-</tr>
-<tr class="odd">
-<td>-32601</td>
-<td>Method not found</td>
-<td>The method does not exist / is not available.</td>
-</tr>
-<tr class="even">
-<td>-32602</td>
-<td>Invalid params</td>
-<td>Invalid method parameter(s).</td>
-</tr>
-<tr class="odd">
-<td>-32603</td>
-<td>Internal error</td>
-<td>Internal JSON-RPC error.</td>
-</tr>
-<tr class="even">
-<td>-32000 to -32099</td>
-<td>Server error</td>
-<td>Reserved for implementation-defined server-errors.</td>
-</tr>
-</tbody>
-</table>
-
-The remainder of the space is available for application defined errors.
+... THE CHANGES HERE! ... error code is a float "HTTP_STATUS.FREE_ERROR_CODE" and
 
 </div>
 </div>
@@ -299,93 +273,93 @@ Syntax:
 rpc call with positional
     parameters:
 
-    --> {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}
-    <-- {"jsonrpc": "2.0", "result": 19, "id": 1}
+    --> {"jsonrpc": "2.0-rest", "method": "subtract", "params": [42, 23], "id": 1}
+    <-- {"jsonrpc": "2.0-rest", "result": 19, "id": 1}
 
-    --> {"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2}
-    <-- {"jsonrpc": "2.0", "result": -19, "id": 2}
+    --> {"jsonrpc": "2.0-rest", "method": "subtract", "params": [23, 42], "id": 2}
+    <-- {"jsonrpc": "2.0-rest", "result": -19, "id": 2}
 
 rpc call with named
     parameters:
 
-    --> {"jsonrpc": "2.0", "method": "subtract", "params": {"subtrahend": 23, "minuend": 42}, "id": 3}
-    <-- {"jsonrpc": "2.0", "result": 19, "id": 3}
+    --> {"jsonrpc": "2.0-rest", "method": "subtract", "params": {"subtrahend": 23, "minuend": 42}, "id": 3}
+    <-- {"jsonrpc": "2.0-rest", "result": 19, "id": 3}
 
-    --> {"jsonrpc": "2.0", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": 4}
-    <-- {"jsonrpc": "2.0", "result": 19, "id": 4}
+    --> {"jsonrpc": "2.0-rest", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": 4}
+    <-- {"jsonrpc": "2.0-rest", "result": 19, "id": 4}
 
 a Notification:
 
-    --> {"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]}
-    --> {"jsonrpc": "2.0", "method": "foobar"}
+    --> {"jsonrpc": "2.0-rest", "method": "update", "params": [1,2,3,4,5]}
+    --> {"jsonrpc": "2.0-rest", "method": "foobar"}
 
 rpc call of non-existent method:
 
-    --> {"jsonrpc": "2.0", "method": "foobar", "id": "1"}
-    <-- {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}
+    --> {"jsonrpc": "2.0-rest", "method": "foobar", "id": "1"}
+    <-- {"jsonrpc": "2.0-rest", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}
 
 rpc call with invalid JSON:
 
-    --> {"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]
-    <-- {"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}
+    --> {"jsonrpc": "2.0-rest", "method": "foobar, "params": "bar", "baz]
+    <-- {"jsonrpc": "2.0-rest", "error": {"code": -32700, "message": "Parse error"}, "id": null}
 
 rpc call with invalid Request object:
 
-    --> {"jsonrpc": "2.0", "method": 1, "params": "bar"}
-    <-- {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
+    --> {"jsonrpc": "2.0-rest", "method": 1, "params": "bar"}
+    <-- {"jsonrpc": "2.0-rest", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
 
 rpc call Batch, invalid JSON:
 
     --> [
-      {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
-      {"jsonrpc": "2.0", "method"
+      {"jsonrpc": "2.0-rest", "method": "sum", "params": [1,2,4], "id": "1"},
+      {"jsonrpc": "2.0-rest", "method"
     ]
-    <-- {"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}
+    <-- {"jsonrpc": "2.0-rest", "error": {"code": -32700, "message": "Parse error"}, "id": null}
 
 rpc call with an empty Array:
 
     --> []
-    <-- {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
+    <-- {"jsonrpc": "2.0-rest", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
 
 rpc call with an invalid Batch (but not empty):
 
     --> [1]
     <-- [
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
+      {"jsonrpc": "2.0-rest", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]
 
 rpc call with invalid Batch:
 
     --> [1,2,3]
     <-- [
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
+      {"jsonrpc": "2.0-rest", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+      {"jsonrpc": "2.0-rest", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+      {"jsonrpc": "2.0-rest", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]
 
 rpc call Batch:
 
     --> [
-            {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
-            {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
-            {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
+            {"jsonrpc": "2.0-rest", "method": "sum", "params": [1,2,4], "id": "1"},
+            {"jsonrpc": "2.0-rest", "method": "notify_hello", "params": [7]},
+            {"jsonrpc": "2.0-rest", "method": "subtract", "params": [42,23], "id": "2"},
             {"foo": "boo"},
-            {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
-            {"jsonrpc": "2.0", "method": "get_data", "id": "9"}
+            {"jsonrpc": "2.0-rest", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
+            {"jsonrpc": "2.0-rest", "method": "get_data", "id": "9"}
         ]
     <-- [
-            {"jsonrpc": "2.0", "result": 7, "id": "1"},
-            {"jsonrpc": "2.0", "result": 19, "id": "2"},
-            {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
-            {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "5"},
-            {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
+            {"jsonrpc": "2.0-rest", "result": 7, "id": "1"},
+            {"jsonrpc": "2.0-rest", "result": 19, "id": "2"},
+            {"jsonrpc": "2.0-rest", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+            {"jsonrpc": "2.0-rest", "error": {"code": -32601, "message": "Method not found"}, "id": "5"},
+            {"jsonrpc": "2.0-rest", "result": ["hello", 5], "id": "9"}
         ]
 
 rpc call Batch (all notifications):
 
     --> [
-            {"jsonrpc": "2.0", "method": "notify_sum", "params": [1,2,4]},
-            {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]}
+            {"jsonrpc": "2.0-rest", "method": "notify_sum", "params": [1,2,4]},
+            {"jsonrpc": "2.0-rest", "method": "notify_hello", "params": [7]}
         ]
     <-- //Nothing is returned for all notification batches
 
