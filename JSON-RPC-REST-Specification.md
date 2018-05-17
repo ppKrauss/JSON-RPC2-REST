@@ -59,7 +59,6 @@ One implementation of this specification could easily fill both of those
 roles, even at the same time, to other different clients or the same
 client. This specification does not address that layer of complexity.
 
-<div class="section">
 ## 3 Compatibility
 
 JSON-RPC2-REST Request objects and Response objects may not work with
@@ -76,17 +75,19 @@ not the peer-to-peer and class hinting aspects of 1.0.
 
 * HTTP status is passed by HTTP and by error-code (integer part of the error code). <br/>Is a debug: status inconsistensy is a response bug.<br/>Optional handling: integer error code (or float with decimal zero) interpreted as internal errror (not a copy of the HTTP status).
 
+* Warning semantic: when coexist `result` and `error`  members in the response, and error code is `200.DDDDD`.
+
 * Method name is implicit by endpoint: method name and semantic of the name (usually expressing "put", "get", "delete", "update, etc. as suffix) is a redundancy, so alternative extension is to standardize some naming-suffix conventions.
 
 ## 3.2 Differences
 
 Differences between JSON-RPC2 and JSON-RPC2-REST.  
 
-...
+* Error codes in the form `HTTP_STATUS.INTERNAL_ERROR_CODE`, eg. `501.00123` (fixed five-digits internal error codes).
+* ...
 
-</div>
+... RATIONALE: .... error codes with status codes, as float number, to preserve same as RPC in library and internal call. Eg. SQL stored procedure (lib. function) that can be use internally in SQL scripts, or by remote call, with same JSON O/I.   
 
-<div class="section">
 
 ## 4 Request object
 
@@ -134,9 +135,6 @@ confusion in handling.
 many decimal fractions cannot be represented exactly as binary
 fractions.
 
-
-<div class="section">
-
 ### 4.1 Notification
 
 A Notification is a Request object without an "id" member. A Request
@@ -149,9 +147,6 @@ Notifications are not confirmable by definition, since they do not have
 a Response object to be returned. As such, the Client would not be aware
 of any errors (like e.g. "Invalid params","Internal error").
 
-</div>
-
-<div class="section">
 
 ### 4.2 Parameter Structures
 
@@ -165,10 +160,6 @@ value. Either by-position through an Array or by-name through an Object.
     result in an error being generated. The names MUST match exactly,
     including case, to the method's expected parameters.
 
-</div>
-</div>
-
-<div class="section">
 
 ## 5 Response object
 
@@ -210,7 +201,6 @@ JSON Object, with the following members:
 Either the result member or error member MUST be included, but both
 members MUST NOT be included.
 
-<div class="section">
 
 ### 5.1 Error object
 
@@ -231,12 +221,9 @@ members:
     The value of this member is defined by the Server (e.g. detailed
     error information, nested errors etc.).
 
-... If the Response Object contains a `result` member, the semantic is not a "full error" but a warning.
+... If the Response Object contains a `result` member and error code is `200.DDDDD`, the semantic is not a "full error" but a warning.
 
 ... THE CHANGES HERE! ... error code is a float "HTTP_STATUS.FREE_ERROR_CODE" and
-
-</div>
-</div>
 
 
 ## 6 Batch
@@ -371,8 +358,6 @@ in a related specification. All system extensions are OPTIONAL.
 
 -----
 
-<div class="footer">
-
 Copyright (C) 2007-2010 by the JSON-RPC Working Group
 Copyright (C) 2018 by PPKrauss (minor adaptation for REST)
 
@@ -393,4 +378,4 @@ LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION HEREIN WILL NOT
 INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR
 FITNESS FOR A PARTICULAR PURPOSE.
 
-</div>
+
